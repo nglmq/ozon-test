@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  shortener-service:
+    build: .
+    container_name: shortener-service
+    ports:
+      - "8080:8080"
+      - "5050:5050"
+    environment:
+      - DATABASE_URL=${DATABASE_URL:-postgres://postgres:password@db:5432/shortener}
+      - PORT=${PORT:-:8080}
+      - BASE_URL=${BASE_URL:-http://localhost:8080}
+      - GRPC_SERVER=${GRPC_SERVER:-false}
+      - INMEMORY=${INMEMORY:-false}
+    command: ["/build", "-f", "${INMEMORY:-false}", "-p", "${PORT:-:8080}", "-b", "${BASE_URL:-http://localhost:8080}", "-g", "${GRPC_SERVER:-false}"]
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - internal
+
+  db:
+    image: postgres:13
+    container_name: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: shortener
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d shortener'"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
