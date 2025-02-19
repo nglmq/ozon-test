@@ -1,26 +1,57 @@
 package handlers
 
 import (
+	"context"
+	"github.com/nglmq/ozon-test/internal/app/service"
+	"github.com/nglmq/ozon-test/internal/storage/inmemory"
+	"github.com/nglmq/ozon-test/pkg/models"
+	"github.com/stretchr/testify/assert"
 	"net/http"
-	"reflect"
+	"net/http/httptest"
 	"testing"
 )
 
 func TestHandleGet(t *testing.T) {
-	type args struct {
-		service *service.URLService
-	}
+	storage := inmemory.NewInMemoryURLStorage()
+	urlService := service.NewURLService(storage)
+
+	storage.Save(context.Background(), &models.URL{Original: "https://ozon.ru", Short: "abcdef"})
+
+	handler := HandleGet(urlService)
+
 	tests := []struct {
-		name string
-		args args
-		want http.HandlerFunc
+		name       string
+		urlPath    string
+		statusCode int
+		location   string
 	}{
-		// TODO: Add test cases.
+		{
+			name:       "Valid URL",
+			urlPath:    "/abcdef",
+			statusCode: http.StatusTemporaryRedirect,
+			location:   "https://ozon.ru",
+		},
+		{
+			name:       "Invalid URL",
+			urlPath:    "/nonexistent",
+			statusCode: http.StatusBadRequest,
+			location:   "",
+		},
 	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := HandleGet(tt.args.service); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("HandleGet() = %v, want %v", got, tt.want)
+			req := httptest.NewRequest(http.MethodGet, tt.urlPath, nil)
+			w := httptest.NewRecorder()
+
+			handler(w, req)
+
+			resp := w.Result()
+
+			assert.Equal(t, tt.statusCode, resp.StatusCode)
+
+			if tt.statusCode == http.StatusTemporaryRedirect {
+				assert.Equal(t, tt.location, resp.Header.Get("Location"))
 			}
 		})
 	}

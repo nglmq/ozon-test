@@ -13,7 +13,7 @@ services:
       - BASE_URL=${BASE_URL:-http://localhost:8080}
       - GRPC_SERVER=${GRPC_SERVER:-false}
       - INMEMORY=${INMEMORY:-false}
-    command: ["/build", "-f", "${INMEMORY:-false}", "-p", "${PORT:-:8080}", "-b", "${BASE_URL:-http://localhost:8080}", "-g", "${GRPC_SERVER:-false}"]
+    command: ["/build", "-m", "${INMEMORY:-false}", "-p", "${PORT:-:8080}", "-b", "${BASE_URL:-http://localhost:8080}", "-g", "${GRPC_SERVER:-false}", "-d", "${DATABASE_URL:-postgres://postgres:password@db:5432/shortener}"]
     depends_on:
       db:
         condition: service_healthy

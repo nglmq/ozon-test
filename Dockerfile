@@ -1,6 +1,6 @@
-FROM golang:1.22
+FROM golang:1.23
 
-WORKDIR ./app
+WORKDIR /app
 
 COPY . .
 
@@ -11,4 +11,4 @@ RUN go mod tidy && \
 EXPOSE 8080
 EXPOSE 5050
 
-CMD ["/build", "-f", "true", "-p", ":8080", "-b", "http://localhost:8080", "-g", "false"]
+CMD ["/build", "-d", "true", "-p", ":8080", "-b", "http://localhost:8080", "-g", "false"]

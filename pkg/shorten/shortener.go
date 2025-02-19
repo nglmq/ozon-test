@@ -1,4 +1,4 @@
-package url
+package shorten
 
 import "math/rand"
 
